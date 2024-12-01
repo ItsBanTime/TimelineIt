@@ -28,6 +28,15 @@
         }
         #timeline {
             margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        .event {
+            margin-bottom: 10px;
+        }
+        .event strong {
+            color: #2c3e50;
         }
     </style>
 </head>
@@ -55,14 +64,19 @@
                 timelineDiv.innerHTML = '';
 
                 // Generate timeline from the data
-                timelineData.forEach(event => {
-                    const eventDiv = document.createElement('div');
-                    eventDiv.innerHTML = `<strong>${event.date}</strong>: ${event.description}`;
-                    timelineDiv.appendChild(eventDiv);
-                });
+                if (timelineData.length === 0) {
+                    timelineDiv.innerHTML = '<p>No events found in the text provided.</p>';
+                } else {
+                    timelineData.forEach(event => {
+                        const eventDiv = document.createElement('div');
+                        eventDiv.classList.add('event');
+                        eventDiv.innerHTML = `<strong>${event.date}</strong>: ${event.description}`;
+                        timelineDiv.appendChild(eventDiv);
+                    });
+                }
             } catch (error) {
                 console.error("Error generating timeline", error);
-                alert("There was an error generating the timeline.");
+                alert("There was an error generating the timeline. Please check the server and try again.");
             }
         }
     </script>
