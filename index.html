@@ -47,7 +47,7 @@
 
             try {
                 // Send input text to server-side for timeline processing
-                const response = await axios.post('/process_text', { text });
+                const response = await axios.post('http://localhost:5000/process_text', { text });
                 const timelineData = response.data;
 
                 // Clear previous timeline
@@ -110,4 +110,4 @@ def process_text():
     return jsonify(events)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
