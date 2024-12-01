@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #timeline {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Timeline Generator</h1>
+    <textarea id="textInput" placeholder="Enter text here..."></textarea><br>
+    <button onclick="generateTimeline()">Generate Timeline</button>
+    <div id="timeline"></div>
+
+    <script>
+        async function generateTimeline() {
+            const text = document.getElementById("textInput").value;
+            if (!text) {
+                alert("Please enter some text.");
+                return;
+            }
+
+            try {
+                // Send input text to server-side for timeline processing
+                const response = await axios.post('/process_text', { text });
+                const timelineData = response.data;
+
+                // Clear previous timeline
+                const timelineDiv = document.getElementById('timeline');
+                timelineDiv.innerHTML = '';
+
+                // Generate timeline from the data
+                timelineData.forEach(event => {
+                    const eventDiv = document.createElement('div');
+                    eventDiv.innerHTML = `<strong>${event.date}</strong>: ${event.description}`;
+                    timelineDiv.appendChild(eventDiv);
+                });
+            } catch (error) {
+                console.error("Error generating timeline", error);
+                alert("There was an error generating the timeline.");
+            }
+        }
+    </script>
+</body>
+</html>
+
+# Python backend using Flask
+# Save this as app.py
+from flask import Flask, request, jsonify
+import re
+from dateutil import parser
+import spacy
+from datetime import datetime
+
+app = Flask(__name__)
+nlp = spacy.load("en_core_web_sm")
+
+# Function to extract dates and descriptions
+def extract_dates_and_descriptions(text):
+    doc = nlp(text)
+    events = []
+    date_pattern = r'\b(\w+\s+\d{1,2},\s+\d{4}|\d{4})\b'
+
+    for sent in doc.sents:
+        match = re.search(date_pattern, sent.text)
+        if match:
+            try:
+                date = parser.parse(match.group(0))
+                description = sent.text.strip()
+                events.append({"date": date.strftime('%b %d, %Y'), "description": description})
+            except ValueError:
+                continue
+    
+    return sorted(events, key=lambda x: datetime.strptime(x['date'], '%b %d, %Y'))
+
+# Flask route to process text input
+@app.route('/process_text', methods=['POST'])
+def process_text():
+    data = request.get_json()
+    text = data.get('text', '')
+    if not text:
+        return jsonify([])
+    
+    events = extract_dates_and_descriptions(text)
+    return jsonify(events)
+
+if __name__ == '__main__':
+    app.run(debug=True)
