@@ -55,18 +55,30 @@
                 const match = sentence.match(datePattern);
                 if (match) {
                     const dateStr = match[0];
-                    try {
-                        const date = new Date(dateStr);
-                        if (!isNaN(date.getTime())) {
-                            events.push({ date: date, description: sentence.trim() });
+                    let date;
+                    let formattedDate;
+
+                    // If only a year is given, use the year only
+                    if (/^\d{4}$/.test(dateStr)) {
+                        formattedDate = dateStr;
+                    } else {
+                        try {
+                            date = new Date(dateStr);
+                            if (!isNaN(date.getTime())) {
+                                formattedDate = date.toDateString();
+                            }
+                        } catch (e) {
+                            // Ignore invalid dates
                         }
-                    } catch (e) {
-                        // Ignore invalid dates
+                    }
+
+                    if (formattedDate) {
+                        events.push({ date: formattedDate, description: sentence.trim() });
                     }
                 }
             });
 
-            return events.sort((a, b) => a.date - b.date);
+            return events.sort((a, b) => a.date.localeCompare(b.date));
         }
 
         function generateTimeline() {
@@ -89,7 +101,7 @@
                 timelineData.forEach(event => {
                     const eventDiv = document.createElement('div');
                     eventDiv.classList.add('event');
-                    eventDiv.innerHTML = `<strong>${event.date.toDateString()}</strong>: ${event.description}`;
+                    eventDiv.innerHTML = `<strong>${event.date}</strong>: ${event.description}`;
                     timelineDiv.appendChild(eventDiv);
                 });
             }
